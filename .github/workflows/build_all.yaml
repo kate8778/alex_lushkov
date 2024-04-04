@@ -1,0 +1,29 @@
+name: "Build all variants of Docker images"
+on:
+  push: 
+    branches:
+      - '*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        base_image:
+          - alpine
+          - ubuntu
+        target:
+          - builder
+          - release
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Check out Project"
+        uses: "actions/checkout@v3"
+        with:
+          fetch-depth: 0 
+          
+      - name: "Build Docker image"
+        uses: "./.github/actions/build_image"
+        with:
+          dockerfile: "Dockerfile.${{ matrix.base_image }}"
+          image: ${{ matrix.target }}:${{ matrix.base_image }}
+          target: ${{ matrix.target }}

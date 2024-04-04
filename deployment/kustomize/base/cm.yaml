@@ -1,0 +1,16 @@
+cm.yaml
+apiVersion: v1
+data:
+  default.conf: |+
+    server {
+        listen       80;
+
+        location / {
+            root   /usr/share/nginx/html;
+            index  cv.html;
+        }
+    }
+
+kind: ConfigMap
+metadata:
+  name: cv-mostashkin

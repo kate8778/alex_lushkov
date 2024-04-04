@@ -1,0 +1,46 @@
+#deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cv-mostashkin
+spec:
+  replicas: 1
+  template:
+    spec:
+      initContainers:
+        - name: cv
+          image: cv
+          command:
+            - /bin/sh
+            - -c
+            - cp -v /opt/app/* /cv
+          volumeMounts:
+            - mountPath: /cv
+              name: cv
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: cv
+            - name: config
+              mountPath: /etc/nginx/conf.d
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "500Mi"
+              cpu: "1"
+      volumes:
+        - name: cv
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: cv-mostashkin
+      nodeSelector:
+        topology.kubernetes.io/zone: ru-central1-a

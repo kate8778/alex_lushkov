@@ -1,0 +1,30 @@
+name: "Docker Image Builder"
+description: "Action to build Docker images"
+inputs:
+  image:
+    description: "The name and tag for the Docker image (e.g., 'my_image:latest')"
+    required: true
+  dockerfile:
+    description: "Path to the Dockerfile to use for building the image"
+    required: true
+    default: "Dockerfile"
+  target:
+    description: "Build stage target to build (optional)"
+    required: false
+    default: ""
+  context:
+    description: "Build context directory (default is the current directory)"
+    required: true
+    default: "."
+outputs: {}
+runs:
+  using: "composite"
+  steps:
+    - name: "Build Docker image"
+      uses: "docker/build-push-action@v2"
+      with:
+        context: "${{ inputs.context }}"
+        file: "${{ inputs.dockerfile }}"
+        push: false
+        tags: "${{ inputs.image }}"
+        target: "${{ inputs.target }}"

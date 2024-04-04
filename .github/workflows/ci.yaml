@@ -1,0 +1,57 @@
+name: "CI Workflow"
+on:
+  push: 
+    branches:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        default: latest
+        description: "Image tag"
+      base_image:
+        required: true
+        type: choice
+        default: alpine
+        options:
+          - alpine
+          - ubuntu
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BUILDER_IMAGE: cv-builder
+      RELEASE_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/cv
+      TAG: "${{ inputs.tag != '' && inputs.tag || github.ref_name }}"
+      BASE_IMAGE: "${{ inputs.base_image != '' && inputs.base_image || 'alpine' }}"
+    steps:
+      - name: "Check out Project"
+        uses: "actions/checkout@v3"
+        with:
+          fetch-depth: 0 
+      - name: "Build builder image"
+        uses: "docker/build-push-action@v3"
+        with:
+          context: .
+          file: "./Dockerfile.${{ env.BASE_IMAGE }}"
+          push: false
+          tags: "${{ env.BUILDER_IMAGE }}:${{ env.TAG }}"
+          target: builder
+
+      - name: "Test"
+        run: |
+          docker run --rm "${{ env.BUILDER_IMAGE }}:${{ env.TAG }}" json
+
+      - name: "Login to Docker Hub"
+        uses: "docker/login-action@v2"
+        with:
+          username: "${{ secrets.DOCKERHUB_USERNAME }}"
+          password: "${{ secrets.DOCKERHUB_TOKEN }}"
+      
+      - name: "Build release image"
+        uses: "docker/build-push-action@v3"
+        with:
+          context: .
+          file: "./Dockerfile.${{ env.BASE_IMAGE }}"
+          push: true
+          tags: "${{ env.RELEASE_IMAGE }}:${{ env.TAG }}"
