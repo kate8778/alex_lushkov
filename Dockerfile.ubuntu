@@ -29,7 +29,7 @@ COPY .env .env
 ENTRYPOINT ["/usr/bin/task"]
 
 FROM builder as build
-RUN task docker-build
+RUN task build
 
 FROM busybox as release
 WORKDIR /opt/app
